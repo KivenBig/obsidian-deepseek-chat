@@ -1,0 +1,38 @@
+name: Bug report / 问题反馈
+description: Something does not work as expected / 功能不符合预期
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please never paste your API key. 请不要贴出你的 API Key。
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened / 发生了什么
+      description: Steps to reproduce and what you expected / 复现步骤和预期结果
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Error message / 报错信息
+      description: Text shown in the chat, or from the developer console (Ctrl/Cmd+Shift+I) / 对话里的报错或开发者控制台内容
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin version / 插件版本
+    validations:
+      required: true
+  - type: input
+    id: obsidian-version
+    attributes:
+      label: Obsidian version and platform / Obsidian 版本与平台
+      placeholder: 1.9.x, macOS / Windows / iOS / Android
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Model and enabled features / 模型与开启的功能
+      placeholder: deepseek-flash, thinking on, web search on

@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: DeepSeek API documentation / DeepSeek 接口文档
+    url: https://api-docs.deepseek.com/zh-cn/
+    about: Questions about the API itself, pricing or account / 接口本身、价格或账户问题
