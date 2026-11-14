@@ -1,7 +1,7 @@
 {
 	"id": "deepseek-chat",
 	"name": "DeepSeek Chat",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"minAppVersion": "1.8.7",
 	"description": "Chat with DeepSeek using your own API key: web search, deep search, read links, file input, safety check, auto titles, text-to-speech and speech input.",
 	"author": "kiven大汉堡",

@@ -51,7 +51,9 @@ Chats are saved as JSON files in `DeepSeek Chats/` in your vault (configurable),
 - **Account and payment required.** The plugin needs a DeepSeek API key. Using it is billed by DeepSeek to your own DeepSeek account at their published prices; web search, link reading, document parsing, text-to-speech and speech input are billed separately by DeepSeek. The plugin itself is free.
 - **Network use.** The plugin connects only to the DeepSeek API (`https://api.deepseek.com` by default, or the base URL you set). It sends your messages, any notes or files you attach, and — when you enable vault tools — note content the model asks to read. Web search and link reading are performed by DeepSeek's servers. Streaming replies use `fetch` because Obsidian's `requestUrl` cannot read a response incrementally; every other request uses `requestUrl`.
 - **No telemetry, no ads.** The plugin collects no analytics and sends nothing to the author.
-- **Files.** The plugin only reads and writes inside your vault: chat files in the chat folder you choose, and notes you export. Vault tools are read-only.
+- **Files.** The plugin only reads and writes inside your vault: chat files in the chat folder you choose, and notes you export or save. Vault tools are read-only.
+- **Listing vault files.** The plugin lists files in your vault to (1) let you pick a vault file to attach, (2) find your saved chats in the chat folder, and (3) run the `search_notes` vault tool when you have turned vault tools on. File paths and content stay on your device unless the model reads a note through a tool you enabled.
+- **Clipboard.** The plugin only *writes* to the clipboard when you click **Copy**. It never reads your clipboard; pasting into the chat box is handled by the input field itself.
 - **API key storage.** Your key is stored in plain text in `.obsidian/plugins/deepseek-chat/data.json`, like all plugin settings. If you sync your vault with Git or share it, exclude that file.
 
 ## Cost estimate
@@ -103,7 +105,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). The original feature design is in [docs/
 - **需要账户并付费**：使用 DeepSeek API 会按官方价格从你自己的 DeepSeek 账户扣费；联网搜索、读链接、文档解析、朗读、语音识别由 DeepSeek 另行计费。插件本身免费。
 - **网络使用**：插件只连接 DeepSeek 接口（默认 `https://api.deepseek.com`，或你设置的地址），发送你的消息、你附带的笔记和文件，以及开启笔记库工具后模型要求读取的笔记内容。联网搜索和读链接由 DeepSeek 服务端执行。流式回答使用 `fetch`（Obsidian 的 `requestUrl` 不支持逐块读取），其余请求都使用 `requestUrl`。
 - **没有遥测、没有广告**：不收集任何使用数据，不向作者发送任何内容。
-- **文件**：只在你的库内读写，即会话文件夹里的会话文件和你导出的笔记。笔记库工具只读。
+- **文件**：只在你的库内读写，即会话文件夹里的会话文件，以及你导出或另存的笔记。笔记库工具只读。
+- **列出库中文件**：插件会列出库里的文件，用于三件事：从库中选择附件、在会话文件夹里找到你保存的会话、在你开启笔记库工具后执行「搜索笔记」。文件路径和内容只留在你的设备上，除非模型通过你开启的工具读取了某篇笔记。
+- **剪贴板**：只在你点「复制」时**写入**剪贴板，从不读取剪贴板；往对话框里粘贴是输入框本身的功能。
 - **API Key 存储**：和所有插件设置一样，以明文保存在 `.obsidian/plugins/deepseek-chat/data.json`。如果你用 Git 同步或分享整个库，请排除这个文件。
 
 ### 费用估算

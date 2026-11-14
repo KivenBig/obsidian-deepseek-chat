@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented here. Versions follow [Semantic Versioning](https://semver.org/). Release notes for each tag are taken from the matching section below.
 
+## 0.1.1
+
+- Remove all `!important` rules and the partially supported `text-decoration-style` from styles (community review CSS lint)
+- README: disclose vault file listing and clipboard writing
+
 ## 0.1.0
 
 First public release.
