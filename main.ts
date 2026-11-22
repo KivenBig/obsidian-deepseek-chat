@@ -40,6 +40,12 @@ export default class DeepSeekChatPlugin extends Plugin {
 			this.data.vaultToolsEnabled = true;
 			this.data.settingsVersion = 2;
 		}
+		// v2 → v3：默认开启笔记写入工具（配合默认开启的「写入前弹窗确认」保证安全）
+		if (this.data.settingsVersion < 3) {
+			this.data.vaultWriteEnabled = true;
+			this.data.vaultWriteConfirm = true;
+			this.data.settingsVersion = 3;
+		}
 		setLanguage(this.data.language);
 		const L = t();
 		this.store = new SessionStore(this.app, () => this.data.chatFolder);

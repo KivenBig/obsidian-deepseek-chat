@@ -594,3 +594,47 @@
 	color: var(--text-accent);
 	background: var(--background-modifier-active-hover);
 }
+
+/* 写入确认弹窗 */
+.dsc-write-modal {
+	width: min(640px, 92vw);
+}
+.dsc-write-path {
+	padding: var(--size-4-2) var(--size-4-3);
+	border-radius: var(--radius-s);
+	background: var(--background-secondary);
+	font-size: var(--font-ui-small);
+	word-break: break-all;
+	margin-bottom: var(--size-4-3);
+}
+.dsc-write-preview {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-4-1);
+	margin-bottom: var(--size-4-3);
+}
+.dsc-write-label {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	font-weight: var(--font-medium);
+}
+.dsc-write-preview pre.dsc-code {
+	margin: 0;
+	max-height: 220px;
+	padding: var(--size-4-2);
+	border-radius: var(--radius-s);
+	background: var(--background-secondary);
+	font-size: var(--font-ui-smaller);
+}
+.dsc-write-preview pre.dsc-write-diff-old {
+	border-left: 3px solid var(--text-error);
+	background: rgba(var(--color-red-rgb), 0.06);
+}
+.dsc-write-preview pre.dsc-write-diff-new {
+	border-left: 3px solid var(--color-green);
+	background: rgba(var(--color-green-rgb), 0.06);
+}
+.dsc-write-warn {
+	margin-top: 0;
+	margin-bottom: var(--size-4-3);
+}

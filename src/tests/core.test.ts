@@ -8,6 +8,7 @@ import { computeCost, DEFAULT_PRICING, isPeak } from "../core/pricing";
 import { buildReminder } from "../core/reminder";
 import { SSEParser } from "../core/sse";
 import type { Session, StoredMessage } from "../core/types";
+import { applyAppend, applyEdit, buildVaultSystem, getVaultTools, validateNotePath } from "../core/vault-tools";
 
 let passed = 0;
 function test(name: string, fn: () => void) {
@@ -195,6 +196,49 @@ test("音频：WAV 头、PCM 解码、计费字符", () => {
 	assert.equal(rest.length, 1);
 	assert.equal(billingLength("你好ab"), 6);
 	assert.equal(truncateBilling("你好ab", 5), "你好a");
+});
+
+test("笔记库工具权限与系统提示词", () => {
+	const ro = getVaultTools({ write: false, move: true, remove: true });
+	assert.deepEqual(
+		ro.map((x) => x.name),
+		["get_current_note", "search_notes", "read_note", "list_folder"],
+	);
+	assert.ok(buildVaultSystem({ write: false, move: false, remove: false }).includes("read-only"));
+
+	const rw = getVaultTools({ write: true, move: false, remove: false });
+	assert.equal(rw.length, 8);
+	assert.ok(rw.some((x) => x.name === "create_note"));
+	assert.ok(!rw.some((x) => x.name === "rename_note"));
+	assert.ok(!rw.some((x) => x.name === "delete_note"));
+
+	const full = getVaultTools({ write: true, move: true, remove: true });
+	assert.equal(full.length, 10);
+	assert.ok(full.some((x) => x.name === "rename_note"));
+	assert.ok(full.some((x) => x.name === "delete_note"));
+	assert.ok(buildVaultSystem({ write: true, move: true, remove: true }).includes("create_note"));
+});
+
+test("笔记路径校验：自动补 .md、拦截越界和隐藏目录", () => {
+	assert.deepEqual(validateNotePath("复盘/2026-11"), { ok: true, path: "复盘/2026-11.md" });
+	assert.deepEqual(validateNotePath("a\\b\\c.md"), { ok: true, path: "a/b/c.md" });
+	assert.equal(validateNotePath("").ok, false);
+	assert.equal(validateNotePath("/etc/passwd").ok, false);
+	assert.equal(validateNotePath("../secret.md").ok, false);
+	assert.equal(validateNotePath(".obsidian/plugins/x.md").ok, false);
+	assert.equal(validateNotePath("notes/.hidden.md").ok, false);
+});
+
+test("笔记追加与局部编辑", () => {
+	assert.equal(applyAppend("第一段", "第二段", "end"), "第一段\n\n第二段");
+	assert.equal(applyAppend("---\ntitle: 测试\n---\n正文", "导语", "start"), "---\ntitle: 测试\n---\n\n导语\n\n正文");
+	assert.equal(applyAppend("正文", "导语", "start"), "导语\n\n正文");
+
+	const ok1 = applyEdit("hello world", "world", "obsidian", false);
+	assert.deepEqual(ok1, { ok: true, content: "hello obsidian", count: 1 });
+	assert.equal(applyEdit("a b a", "a", "x", false).ok, false);
+	assert.deepEqual(applyEdit("a b a", "a", "x", true), { ok: true, content: "x b x", count: 2 });
+	assert.equal(applyEdit("hello", "missing", "x", false).ok, false);
 });
 
 console.log(`\n${passed} passed`);

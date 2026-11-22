@@ -14,12 +14,12 @@ import { t } from "../i18n";
 import type DeepSeekChatPlugin from "../../main";
 import { modelList, reminderLanguage } from "../settings";
 import { newSession } from "../store";
-import { activeMarkdownFile, runVaultTool, VAULT_SYSTEM, VAULT_TOOLS } from "../tools";
-import { CodeModal, ConfirmModal, SessionPicker, TextPromptModal, VaultFilePicker } from "./modals";
+import { activeMarkdownFile, buildVaultSystem, getVaultTools, runVaultTool, type VaultToolPermissions } from "../tools";
+import { CodeModal, ConfirmModal, confirmVaultWrite, SessionPicker, TextPromptModal, VaultFilePicker } from "./modals";
 import { renderAssistantBlocks, resolveNote } from "./render";
 
 export const VIEW_TYPE = "deepseek-chat-view";
-const MAX_TOOL_ROUNDS = 8;
+const MAX_TOOL_ROUNDS = 12;
 const ASR_MAX_SECONDS = 118;
 
 export class ChatView extends ItemView {
@@ -28,6 +28,7 @@ export class ChatView extends ItemView {
 	private abort: AbortController | null = null;
 	private pending: PendingAttachment[] = [];
 	private includeNote = false;
+	private writeAutoApproved = false;
 	private recorder = new Recorder();
 	private recTimer: number | null = null;
 	private raw = new WeakMap<StoredMessage, { request: unknown; response: unknown }>();
@@ -261,7 +262,7 @@ export class ChatView extends ItemView {
 				o.vaultTools = on;
 				void this.save();
 			});
-			setTooltip(b, L.vaultTip);
+			setTooltip(b, this.s.vaultWriteEnabled ? L.vaultTipReadWrite : L.vaultTip);
 		}
 
 		// 附件
@@ -746,20 +747,30 @@ export class ChatView extends ItemView {
 		await this.runTurn();
 	}
 
+	private vaultPerms(): VaultToolPermissions {
+		const write = this.s.vaultToolsEnabled && this.s.vaultWriteEnabled;
+		return {
+			write,
+			move: write && this.s.vaultMoveEnabled,
+			remove: write && this.s.vaultDeleteEnabled,
+		};
+	}
+
 	private buildBody(messages: ApiMessage[]): MessagesRequest {
 		const s = this.s;
 		const o = this.session.options;
 		const body: MessagesRequest = { model: this.session.model, messages };
 		if (s.maxTokens > 0) body.max_tokens = s.maxTokens;
 		const useVault = s.vaultToolsEnabled && !!o.vaultTools;
-		const system = [useVault ? VAULT_SYSTEM : "", this.session.systemPrompt ?? s.systemPrompt].filter((x) => x?.trim()).join("\n\n");
+		const perms = this.vaultPerms();
+		const system = [useVault ? buildVaultSystem(perms) : "", this.session.systemPrompt ?? s.systemPrompt].filter((x) => x?.trim()).join("\n\n");
 		if (system) body.system = system;
 		body.thinking = { type: o.thinking ? "enabled" : "disabled" };
 		if (o.thinking) body.output_config = { effort: o.effort };
 		const tools: ToolDefinition[] = [];
 		if (s.webSearchEnabled && o.webSearch) tools.push({ type: "deepseek_web_search", name: "deepseek_web_search" });
 		if (s.readUrlEnabled) tools.push({ type: "deepseek_read_url", name: "deepseek_read_url" });
-		if (useVault) tools.push(...VAULT_TOOLS.map((x) => ({ ...x })));
+		if (useVault) tools.push(...getVaultTools(perms));
 		if (tools.length) body.tools = tools;
 		if (s.safetyEnabled) body.safety_check = { level: "high" };
 		const firstTurn = groupTurns(this.session.messages).length === 1;
@@ -855,8 +866,21 @@ export class ChatView extends ItemView {
 					const uses = result.content.filter((b) => b.type === "tool_use");
 					if (!uses.length) break;
 					const outputs: Block[] = [];
+					const perms = this.vaultPerms();
 					for (const u of uses) {
-						const r = await runVaultTool(this.app, u.name ?? "", u.input ?? {});
+						const r = await runVaultTool(this.app, u.name ?? "", u.input ?? {}, {
+							perms,
+							confirmWrite: async (req) => {
+								// 删除操作始终弹窗确认；其余写入操作受设置和会话级授权控制
+								if (!req.isDelete && (!this.s.vaultWriteConfirm || this.writeAutoApproved)) return true;
+								const decision = await confirmVaultWrite(this.app, req);
+								if (decision === "allow-session") {
+									this.writeAutoApproved = true;
+									return true;
+								}
+								return decision === "allow";
+							},
+						});
 						outputs.push({ type: "tool_result", tool_use_id: u.id, content: r.text, ...(r.isError ? { is_error: true } : {}) });
 					}
 					this.session.messages.push({ role: "user", content: outputs, meta: { toolResults: true, createdAt: Date.now() } });
@@ -989,6 +1013,7 @@ export class ChatView extends ItemView {
 		if (this.busy) this.abort?.abort();
 		this.session = this.freshSession();
 		this.pending = [];
+		this.writeAutoApproved = false;
 		this.plugin.data.lastSessionId = undefined;
 		await this.plugin.saveSettings();
 		this.build();
@@ -1002,6 +1027,7 @@ export class ChatView extends ItemView {
 			if (!s) return;
 			if (this.busy) this.abort?.abort();
 			this.session = s;
+			this.writeAutoApproved = false;
 			this.plugin.data.lastSessionId = s.id;
 			await this.plugin.saveSettings();
 			this.build();

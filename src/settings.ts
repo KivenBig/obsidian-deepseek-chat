@@ -41,6 +41,10 @@ export interface DSSettings {
 	activeNoteDefault: boolean;
 	vaultToolsEnabled: boolean;
 	vaultToolsDefault: boolean;
+	vaultWriteEnabled: boolean;
+	vaultWriteConfirm: boolean;
+	vaultMoveEnabled: boolean;
+	vaultDeleteEnabled: boolean;
 	settingsVersion: number;
 	editorMenuEnabled: boolean;
 	jsonExtractEnabled: boolean;
@@ -91,7 +95,11 @@ export const DEFAULT_SETTINGS: DSSettings = {
 	activeNoteDefault: false,
 	vaultToolsEnabled: true,
 	vaultToolsDefault: false,
-	settingsVersion: 2,
+	vaultWriteEnabled: true,
+	vaultWriteConfirm: true,
+	vaultMoveEnabled: false,
+	vaultDeleteEnabled: false,
+	settingsVersion: 3,
 	editorMenuEnabled: true,
 	jsonExtractEnabled: true,
 
@@ -354,7 +362,17 @@ export class DSSettingTab extends PluginSettingTab {
 		this.toggle(containerEl, L.sActiveNote, L.sActiveNoteDesc, "activeNoteEnabled", true);
 		if (s.activeNoteEnabled) this.toggle(this.sub(containerEl), L.sActiveNoteDefault, "", "activeNoteDefault");
 		this.toggle(containerEl, L.sVaultTools, L.sVaultToolsDesc, "vaultToolsEnabled", true);
-		if (s.vaultToolsEnabled) this.toggle(this.sub(containerEl), L.sVaultToolsDefault, "", "vaultToolsDefault");
+		if (s.vaultToolsEnabled) {
+			const sub = this.sub(containerEl);
+			this.toggle(sub, L.sVaultToolsDefault, "", "vaultToolsDefault");
+			this.toggle(sub, L.sVaultWrite, L.sVaultWriteDesc, "vaultWriteEnabled", true);
+			if (s.vaultWriteEnabled) {
+				const wsub = this.sub(sub);
+				this.toggle(wsub, L.sVaultWriteConfirm, L.sVaultWriteConfirmDesc, "vaultWriteConfirm");
+				this.toggle(wsub, L.sVaultMove, L.sVaultMoveDesc, "vaultMoveEnabled");
+				this.toggle(wsub, L.sVaultDelete, L.sVaultDeleteDesc, "vaultDeleteEnabled");
+			}
+		}
 		this.toggle(containerEl, L.sEditorMenu, L.sEditorMenuDesc, "editorMenuEnabled");
 		this.toggle(containerEl, L.sJson, L.sJsonDesc, "jsonExtractEnabled");
 

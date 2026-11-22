@@ -100,16 +100,26 @@ function renderStep(card: HTMLElement, use: Block, ctx: RenderCtx) {
 	const pending = !result && ctx.live;
 
 	if (use.type === "tool_use") {
-		stepIcon(head, "wrench");
+		const iconMap: Record<string, string> = {
+			create_note: "file-plus",
+			append_note: "file-pen",
+			edit_note: "file-pen",
+			update_note: "file-pen",
+			rename_note: "folder-input",
+			delete_note: "trash-2",
+		};
+		stepIcon(head, iconMap[use.name ?? ""] ?? "wrench");
 		head.createSpan({ text: `${L.toolCall} · ${use.name ?? ""}`, cls: "dsc-step-label" });
-		const path = str(input.path);
+		const path = str(input.new_path) || str(input.path);
 		const target = path ? (resolveNote(ctx.app, path) ?? resolveNote(ctx.app, `${path}.md`)) : null;
 		if (target) noteLink(head, target);
+		else if (path) head.createSpan({ text: path, cls: "dsc-step-arg" });
 		else {
 			const args = JSON.stringify(input);
 			if (args && args !== "{}") head.createSpan({ text: clipText(args, 80), cls: "dsc-step-arg" });
 		}
 		if (result) {
+			head.createSpan({ text: result.is_error ? "✗" : "✓", cls: result.is_error ? "dsc-err" : "dsc-ok" });
 			const content = typeof result.content === "string" ? result.content : JSON.stringify(result.content);
 			const det = step.createEl("details", { cls: "dsc-step-detail" });
 			det.createEl("summary", { text: `${L.toolResult}${result.is_error ? ` · ${L.failed}` : ""}` });
